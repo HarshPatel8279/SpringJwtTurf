@@ -1,12 +1,15 @@
 package com.SpringJwtTurf.service.impl;
 
 import com.SpringJwtTurf.documents.User;
+import com.SpringJwtTurf.models.common.Address;
 import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
 import com.SpringJwtTurf.models.request.CreateUserRequest;
+import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
 import com.SpringJwtTurf.models.request.UserLoginRequest;
 import com.SpringJwtTurf.models.response.CreateUserLoginResponse;
 import com.SpringJwtTurf.models.response.CreateUserResponse;
+import com.SpringJwtTurf.models.response.CustomerProfileUpdateResponse;
 import com.SpringJwtTurf.models.response.UserResponse;
 import com.SpringJwtTurf.repository.UserRepository;
 import com.SpringJwtTurf.service.UserService;
@@ -14,10 +17,13 @@ import com.SpringJwtTurf.utils.CommonUtilities;
 import com.SpringJwtTurf.utils.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+
+import static org.springframework.http.HttpStatus.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -125,4 +131,36 @@ public class UserServiceImpl implements UserService {
         }
 
     }
+
+    @Override
+    public CustomerProfileUpdateResponse updateCustomer(CustomerProfileUpdateRequest customerProfileUpdateRequest) {
+        User user = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
+
+        if(null!=user)
+        {
+            user.setNameOfUser(customerProfileUpdateRequest.getName());
+            user.setGender(customerProfileUpdateRequest.getGender());
+            user.setPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
+            user.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
+            user.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(),customerProfileUpdateRequest.getZipCode(),customerProfileUpdateRequest.getCity(),customerProfileUpdateRequest.getState(),"India"));
+            user.setEmailId(customerProfileUpdateRequest.getEmailId());
+
+            User updatedUser= userRepository.save(user);
+
+            UserResponse userResponse = new UserResponse(updatedUser);
+
+            CustomerProfileUpdateResponse customerProfileUpdateResponse = new CustomerProfileUpdateResponse(userResponse);
+
+            return customerProfileUpdateResponse;
+
+
+        }
+        else
+        {
+            throw new UsernameNotFoundException("User Not Found");
+        }
+
+    }
+
+
 }
