@@ -23,6 +23,8 @@ public class CreateUserRequest {
     private String displayImageUrl;
     private String role;
 
+    private  Double latitude;
+    private Double longitude;
 
 
 }

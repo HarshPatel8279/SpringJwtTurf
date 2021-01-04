@@ -1,5 +1,7 @@
 package com.SpringJwtTurf.documents;
 
+import com.SpringJwtTurf.models.common.Address;
+import com.SpringJwtTurf.models.common.Location;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -30,6 +32,10 @@ public class User {
     private String displayImageUrl;
     private String role;
 
+    private Address address;
+    private Location location;
+    private Location latestLocation;
+
 
     public User(User user) {
         this._id = user.get_id();
@@ -46,5 +52,9 @@ public class User {
         this.emailId = user.getEmailId();
         this.displayImageUrl = user.getDisplayImageUrl();
         this.role = user.getRole();
+
+        this.address = user.getAddress();
+        this.location = user.getLocation();
+        this.latestLocation = user.getLatestLocation();
     }
 }

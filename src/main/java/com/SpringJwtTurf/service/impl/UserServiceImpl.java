@@ -1,6 +1,7 @@
 package com.SpringJwtTurf.service.impl;
 
 import com.SpringJwtTurf.documents.User;
+import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
 import com.SpringJwtTurf.models.request.CreateUserRequest;
 import com.SpringJwtTurf.models.response.CreateUserResponse;
@@ -51,6 +52,20 @@ public class UserServiceImpl implements UserService {
         addUser.setEmailId(createUserRequest.getEmailId());
         addUser.setDisplayImageUrl(createUserRequest.getDisplayImageUrl());
         addUser.setRole(createUserRequest.getRole());
+
+        Location location = new Location();
+
+        if(null!=createUserRequest && null!=createUserRequest.getLatitude() && null!=createUserRequest.getLongitude())
+        {
+            location.setType("Point");
+            Double locationArray[] = new Double[2];
+            locationArray[0] = createUserRequest.getLongitude();
+            locationArray[1] = createUserRequest.getLatitude();
+            location.setCoordinates(locationArray);
+        }
+
+        addUser.setLocation(location);
+
 
         User newCreatedUser = userRepository.insert(addUser);
 
