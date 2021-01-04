@@ -4,13 +4,17 @@ import com.SpringJwtTurf.documents.User;
 import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
 import com.SpringJwtTurf.models.request.CreateUserRequest;
+import com.SpringJwtTurf.models.request.UserLoginRequest;
+import com.SpringJwtTurf.models.response.CreateUserLoginResponse;
 import com.SpringJwtTurf.models.response.CreateUserResponse;
 import com.SpringJwtTurf.models.response.UserResponse;
 import com.SpringJwtTurf.repository.UserRepository;
 import com.SpringJwtTurf.service.UserService;
+import com.SpringJwtTurf.utils.CommonUtilities;
 import com.SpringJwtTurf.utils.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -79,6 +83,46 @@ public class UserServiceImpl implements UserService {
         CreateUserResponse response = new CreateUserResponse(userResponse,token,refreshToken);
 
         return response;
+
+    }
+
+    @Override
+    public CreateUserLoginResponse userLogin(UserLoginRequest userLoginRequest) {
+
+        String username = userLoginRequest.getUsername();
+        String password = userLoginRequest.getPassword();
+
+        String userLoginType = CommonUtilities.findEmailIdOrPhoneValidator(userLoginRequest.getUsername());
+
+        User isExist = null;
+        if(userLoginType.equals("email"))
+        {
+            isExist= userRepository.findByEmailId(username,password);
+        }
+        else
+        {
+            isExist = userRepository.findUserByPhone(username,password);
+        }
+
+//        System.out.println(isExist);
+//        System.out.println("Hiefnfk\nffhtththth\t\nynynynynyn");
+
+        if(null!=isExist){
+            CustomUserDetails customUserDetails = new CustomUserDetails(isExist);
+            String token = jwtTokenUtil.generateToken(username,customUserDetails,secretToken,secretTokenValidity);
+            String refreshToken = jwtTokenUtil.generateToken(username,customUserDetails,refreshSecret,refreshTokenValidity);
+
+
+
+            UserResponse userResponse = new UserResponse(isExist);
+            CreateUserLoginResponse loginResponse = new CreateUserLoginResponse(userResponse,token,refreshToken);
+
+            return loginResponse;
+
+        }
+        else{
+            throw new UsernameNotFoundException("User Name and password Does not Match");
+        }
 
     }
 }

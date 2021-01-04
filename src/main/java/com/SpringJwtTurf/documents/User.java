@@ -2,10 +2,7 @@ package com.SpringJwtTurf.documents;
 
 import com.SpringJwtTurf.models.common.Address;
 import com.SpringJwtTurf.models.common.Location;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
@@ -15,6 +12,7 @@ import java.time.LocalDate;
 @Document
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class User {
 
     private String _id;

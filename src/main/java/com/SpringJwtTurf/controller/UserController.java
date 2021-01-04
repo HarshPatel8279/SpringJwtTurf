@@ -1,6 +1,8 @@
 package com.SpringJwtTurf.controller;
 
 import com.SpringJwtTurf.models.request.CreateUserRequest;
+import com.SpringJwtTurf.models.request.UserLoginRequest;
+import com.SpringJwtTurf.models.response.CreateUserLoginResponse;
 import com.SpringJwtTurf.models.response.CreateUserResponse;
 import com.SpringJwtTurf.models.response.UserResponse;
 import com.SpringJwtTurf.service.UserService;
@@ -26,6 +28,14 @@ public class UserController {
     public CreateUserResponse createUser(@RequestBody CreateUserRequest createUserRequest)
     {
         return userService.createNewUser(createUserRequest);
+    }
+
+    @PostMapping("/login")
+    public CreateUserLoginResponse userLogin(@RequestBody UserLoginRequest userLoginRequest)
+    {
+        CreateUserLoginResponse createUserLoginResponse = userService.userLogin(userLoginRequest);
+
+        return createUserLoginResponse;
     }
 
 }
