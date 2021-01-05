@@ -135,7 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public CustomerProfileUpdateResponse updateCustomer(CustomerProfileUpdateRequest customerProfileUpdateRequest) {
         User user = userRepository.findByPhoneNumber(customerProfileUpdateRequest.getPhoneNumber());
-
+        System.out.println(user);
         if(null!=user)
         {
             user.setNameOfUser(customerProfileUpdateRequest.getName());
@@ -144,6 +144,15 @@ public class UserServiceImpl implements UserService {
             user.setDateOfBirth(customerProfileUpdateRequest.getDateOfBirth());
             user.setAddress(new Address(customerProfileUpdateRequest.getAddressLine(),customerProfileUpdateRequest.getZipCode(),customerProfileUpdateRequest.getCity(),customerProfileUpdateRequest.getState(),"India"));
             user.setEmailId(customerProfileUpdateRequest.getEmailId());
+
+            Double arr[] = new Double[2];
+            arr[0]=customerProfileUpdateRequest.getLongitude();
+            arr[1] = customerProfileUpdateRequest.getLatitude();
+
+            user.setCountryCode(customerProfileUpdateRequest.getCountryCode());
+            
+            user.setLocation(new Location(user.getLocation().getType(),arr));
+            
 
             User updatedUser= userRepository.save(user);
 
