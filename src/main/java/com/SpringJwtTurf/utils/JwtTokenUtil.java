@@ -83,14 +83,14 @@ public class JwtTokenUtil implements Serializable {
     public List<SimpleGrantedAuthority> getRolesFromToken(String token, String secret) {
         Claims claims = Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
 
-        System.out.println(claims);
+//        System.out.println(claims);
 
         List<SimpleGrantedAuthority> roles = null;
 
         Boolean isAdmin = claims.get("isAdmin", Boolean.class);
         Boolean isUser = claims.get("isUser", Boolean.class);
 
-        System.out.println(isUser+"\t"+isAdmin);
+//        System.out.println(isUser+"\t"+isAdmin);
 
         if (isAdmin != null && isAdmin) {
             roles = Arrays.asList(new SimpleGrantedAuthority("ROLE_ADMIN"));

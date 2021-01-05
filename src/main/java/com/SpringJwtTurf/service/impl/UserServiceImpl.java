@@ -1,5 +1,7 @@
 package com.SpringJwtTurf.service.impl;
 
+import com.SpringJwtTurf.exception.GeneralException;
+import com.SpringJwtTurf.documents.BookedTimeSlot;
 import com.SpringJwtTurf.documents.User;
 import com.SpringJwtTurf.models.common.Address;
 import com.SpringJwtTurf.models.common.Location;
@@ -7,21 +9,18 @@ import com.SpringJwtTurf.models.mics.CustomUserDetails;
 import com.SpringJwtTurf.models.request.CreateUserRequest;
 import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
 import com.SpringJwtTurf.models.request.UserLoginRequest;
-import com.SpringJwtTurf.models.response.CreateUserLoginResponse;
-import com.SpringJwtTurf.models.response.CreateUserResponse;
-import com.SpringJwtTurf.models.response.CustomerProfileUpdateResponse;
-import com.SpringJwtTurf.models.response.UserResponse;
+import com.SpringJwtTurf.models.response.*;
+import com.SpringJwtTurf.repository.BookedTimeSlotRepository;
 import com.SpringJwtTurf.repository.UserRepository;
 import com.SpringJwtTurf.service.UserService;
 import com.SpringJwtTurf.utils.CommonUtilities;
 import com.SpringJwtTurf.utils.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -30,6 +29,7 @@ public class UserServiceImpl implements UserService {
 
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
+    private BookedTimeSlotRepository bookedTimeSlotRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String secretToken;
@@ -44,9 +44,10 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository bookedTimeSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
+        this.bookedTimeSlotRepository = bookedTimeSlotRepository;
     }
 
     @Override
@@ -168,6 +169,29 @@ public class UserServiceImpl implements UserService {
         {
             throw new UsernameNotFoundException("User Not Found");
         }
+
+    }
+
+    @Override
+    public AllBookedSlotsByUserResponse getAllBookedSlots(String username) {
+
+//        System.out.println("Get"+username);
+        User isExist = userRepository.findByPhoneNumber(username);
+
+//        System.out.println(isExist);
+
+        if(null!=isExist)
+        {
+            List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByUserId(username);
+            AllBookedSlotsByUserResponse allBookedSlotsByUserResponse = new AllBookedSlotsByUserResponse(bookedTimeSlots);
+
+            return allBookedSlotsByUserResponse;
+        }
+        else
+        {
+            throw new GeneralException("No UserFound with userId"+username, NOT_FOUND);
+        }
+
 
     }
 
