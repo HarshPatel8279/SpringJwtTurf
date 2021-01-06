@@ -1,5 +1,6 @@
 package com.SpringJwtTurf.service.impl;
 
+import com.SpringJwtTurf.documents.CancelledSlot;
 import com.SpringJwtTurf.enums.BookingStatus;
 import com.SpringJwtTurf.exception.GeneralException;
 import com.SpringJwtTurf.documents.BookedTimeSlot;
@@ -7,12 +8,10 @@ import com.SpringJwtTurf.documents.User;
 import com.SpringJwtTurf.models.common.Address;
 import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
-import com.SpringJwtTurf.models.request.CreateUserRequest;
-import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
-import com.SpringJwtTurf.models.request.UpdateBookedTimeSlotRequest;
-import com.SpringJwtTurf.models.request.UserLoginRequest;
+import com.SpringJwtTurf.models.request.*;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.repository.BookedTimeSlotRepository;
+import com.SpringJwtTurf.repository.CancelledSlotRepository;
 import com.SpringJwtTurf.repository.UserRepository;
 import com.SpringJwtTurf.service.UserService;
 import com.SpringJwtTurf.utils.CommonUtilities;
@@ -22,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -35,6 +35,7 @@ public class UserServiceImpl implements UserService {
     private JwtTokenUtil jwtTokenUtil;
     private UserRepository userRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
+    private CancelledSlotRepository cancelledSlotRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String secretToken;
@@ -49,10 +50,11 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository bookedTimeSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository bookedTimeSlotRepository,CancelledSlotRepository cancelledSlotRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
+        this.cancelledSlotRepository = cancelledSlotRepository;
     }
 
     @Override
@@ -232,6 +234,34 @@ public class UserServiceImpl implements UserService {
         else {
             throw new GeneralException("Invalid Booking Id", OK);
         }
+    }
+
+    @Override
+    @Transactional
+    public TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest) {
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByTurfIdAndStartTime(cancelOrUnavailableSlotRequest.getTurfId(),cancelOrUnavailableSlotRequest.getStartTime());
+
+        if(null!=bookedTimeSlot){
+            CancelledSlot cancelledSlot = new CancelledSlot(bookedTimeSlot);
+
+            bookedTimeSlotRepository.deleteById(bookedTimeSlot.get_id());
+            CancelledSlot savedSlotInDB = cancelledSlotRepository.insert(cancelledSlot);
+
+            if(null!=savedSlotInDB){
+                TimeSlotResponse response = new TimeSlotResponse(savedSlotInDB);
+
+                return response;
+            }
+            else{
+                throw new GeneralException("Error in Cancellation", INTERNAL_SERVER_ERROR);
+
+            }
+
+        }
+        else {
+            throw new GeneralException("No Booked Slot", OK);
+        }
+
     }
 
 

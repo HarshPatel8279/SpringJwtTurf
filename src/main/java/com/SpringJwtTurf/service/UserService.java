@@ -1,9 +1,6 @@
 package com.SpringJwtTurf.service;
 
-import com.SpringJwtTurf.models.request.CreateUserRequest;
-import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
-import com.SpringJwtTurf.models.request.UpdateBookedTimeSlotRequest;
-import com.SpringJwtTurf.models.request.UserLoginRequest;
+import com.SpringJwtTurf.models.request.*;
 import com.SpringJwtTurf.models.response.*;
 
 public interface UserService {
@@ -17,4 +14,6 @@ public interface UserService {
     AllBookedSlotsByUserResponse getAllBookedSlots(String userId);
 
     TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest);
+
+    TimeSlotResponse cancelBookedSlot(CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest);
 }

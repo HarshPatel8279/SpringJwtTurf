@@ -1,9 +1,6 @@
 package com.SpringJwtTurf.controller;
 
-import com.SpringJwtTurf.models.request.CreateUserRequest;
-import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
-import com.SpringJwtTurf.models.request.UpdateBookedTimeSlotRequest;
-import com.SpringJwtTurf.models.request.UserLoginRequest;
+import com.SpringJwtTurf.models.request.*;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,5 +55,11 @@ public class UserController {
         return timeSlotResponse;
     }
 
+    @PostMapping("/cancel-booking")
+    public TimeSlotResponse cancelBookedSlot(@RequestBody CancelOrUnavailableSlotRequest cancelOrUnavailableSlotRequest){
+        TimeSlotResponse response = this.userService.cancelBookedSlot(cancelOrUnavailableSlotRequest);
+
+        return response;
+    }
 
 }

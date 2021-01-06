@@ -6,15 +6,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-public class UpdateBookedTimeSlotRequest {
+public class CancelOrUnavailableSlotRequest {
 
-    private String bookingId;
-    private Double price;
     private String turfId;
-    private String userId;
     private LocalDate date;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
-
 }
 
