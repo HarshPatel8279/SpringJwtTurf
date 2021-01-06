@@ -1,5 +1,6 @@
 package com.SpringJwtTurf.service.impl;
 
+import com.SpringJwtTurf.enums.BookingStatus;
 import com.SpringJwtTurf.exception.GeneralException;
 import com.SpringJwtTurf.documents.BookedTimeSlot;
 import com.SpringJwtTurf.documents.User;
@@ -8,6 +9,7 @@ import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
 import com.SpringJwtTurf.models.request.CreateUserRequest;
 import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
+import com.SpringJwtTurf.models.request.UpdateBookedTimeSlotRequest;
 import com.SpringJwtTurf.models.request.UserLoginRequest;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.repository.BookedTimeSlotRepository;
@@ -17,9 +19,12 @@ import com.SpringJwtTurf.utils.CommonUtilities;
 import com.SpringJwtTurf.utils.JwtTokenUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
@@ -193,6 +198,40 @@ public class UserServiceImpl implements UserService {
         }
 
 
+    }
+
+    @Override
+    public TimeSlotResponse updateBookedSlot(UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest) {
+        BookedTimeSlot bookedTimeSlot = bookedTimeSlotRepository.findByBookingId(updateBookedTimeSlotRequest.getBookingId());
+//        System.out.println("Hey"+bookedTimeSlot);
+        BookedTimeSlot isSlotBooked = bookedTimeSlotRepository.findByTurfIdAndStartTime(updateBookedTimeSlotRequest.getTurfId(),updateBookedTimeSlotRequest.getStartTime());
+
+        if(null!=isSlotBooked)
+        {
+            throw new GeneralException("Slot is Already Booked", OK);
+        }
+
+        if(null!=bookedTimeSlot)
+        {
+            bookedTimeSlot.setBookingId(CommonUtilities.getAlphaNumericString(6));
+            bookedTimeSlot.setUserId(bookedTimeSlot.getUserId());
+            bookedTimeSlot.setTurfId(updateBookedTimeSlotRequest.getTurfId());
+            bookedTimeSlot.setPrice(updateBookedTimeSlotRequest.getPrice());
+            bookedTimeSlot.setDate(updateBookedTimeSlotRequest.getDate());
+            bookedTimeSlot.setStatus(BookingStatus.RESCHEDULED_BY_USER.name());
+            bookedTimeSlot.setStartTime(updateBookedTimeSlotRequest.getStartTime());
+            bookedTimeSlot.setEndTime(updateBookedTimeSlotRequest.getEndTime());
+            bookedTimeSlot.setTimeStamp(LocalDateTime.now(ZoneId.of("Asia/Kolkata")));
+
+            BookedTimeSlot updatedBookedSlot = bookedTimeSlotRepository.save(bookedTimeSlot);
+
+            TimeSlotResponse timeSlotResponse = new TimeSlotResponse(updatedBookedSlot);
+
+            return timeSlotResponse;
+        }
+        else {
+            throw new GeneralException("Invalid Booking Id", OK);
+        }
     }
 
 

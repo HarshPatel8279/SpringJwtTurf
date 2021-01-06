@@ -2,6 +2,7 @@ package com.SpringJwtTurf.controller;
 
 import com.SpringJwtTurf.models.request.CreateUserRequest;
 import com.SpringJwtTurf.models.request.CustomerProfileUpdateRequest;
+import com.SpringJwtTurf.models.request.UpdateBookedTimeSlotRequest;
 import com.SpringJwtTurf.models.request.UserLoginRequest;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.service.UserService;
@@ -47,6 +48,14 @@ public class UserController {
     public AllBookedSlotsByUserResponse allBookedSlots(@RequestParam String username)
     {
         return userService.getAllBookedSlots(username);
+    }
+
+    @PostMapping("/update-booking")
+    public TimeSlotResponse updateBookedSlot(@RequestBody UpdateBookedTimeSlotRequest updateBookedTimeSlotRequest)
+    {
+        TimeSlotResponse timeSlotResponse = this.userService.updateBookedSlot(updateBookedTimeSlotRequest);
+
+        return timeSlotResponse;
     }
 
 
