@@ -1,10 +1,12 @@
 package com.SpringJwtTurf.service.impl;
 
 import com.SpringJwtTurf.documents.CancelledSlot;
+import com.SpringJwtTurf.documents.OpenCloseTime;
 import com.SpringJwtTurf.enums.BookingStatus;
 import com.SpringJwtTurf.exception.GeneralException;
 import com.SpringJwtTurf.documents.BookedTimeSlot;
 import com.SpringJwtTurf.documents.User;
+import com.SpringJwtTurf.models.AllSlot;
 import com.SpringJwtTurf.models.common.Address;
 import com.SpringJwtTurf.models.common.Location;
 import com.SpringJwtTurf.models.mics.CustomUserDetails;
@@ -12,10 +14,12 @@ import com.SpringJwtTurf.models.request.*;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.repository.BookedTimeSlotRepository;
 import com.SpringJwtTurf.repository.CancelledSlotRepository;
+import com.SpringJwtTurf.repository.OpenCloseTimeRepository;
 import com.SpringJwtTurf.repository.UserRepository;
 import com.SpringJwtTurf.service.UserService;
 import com.SpringJwtTurf.utils.CommonUtilities;
 import com.SpringJwtTurf.utils.JwtTokenUtil;
+import jdk.jshell.execution.LoaderDelegate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -23,8 +27,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.*;
@@ -36,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private UserRepository userRepository;
     private BookedTimeSlotRepository bookedTimeSlotRepository;
     private CancelledSlotRepository cancelledSlotRepository;
+    private OpenCloseTimeRepository openCloseTimeRepository;
 
     @Value("${jwt.secret.accessToken}")
     private String secretToken;
@@ -50,11 +57,12 @@ public class UserServiceImpl implements UserService {
     private long refreshTokenValidity;
 
     @Autowired
-    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository bookedTimeSlotRepository,CancelledSlotRepository cancelledSlotRepository) {
+    public UserServiceImpl(JwtTokenUtil jwtTokenUtil, UserRepository userRepository,BookedTimeSlotRepository bookedTimeSlotRepository,CancelledSlotRepository cancelledSlotRepository,OpenCloseTimeRepository openCloseTimeRepository) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userRepository = userRepository;
         this.bookedTimeSlotRepository = bookedTimeSlotRepository;
         this.cancelledSlotRepository = cancelledSlotRepository;
+        this.openCloseTimeRepository = openCloseTimeRepository;
     }
 
     @Override
@@ -263,6 +271,155 @@ public class UserServiceImpl implements UserService {
         }
 
     }
+
+    @Override
+    public GetAllSlotsResponse getAllSlotsByDate(GetAllSlotsRequest getAllSlotsRequest) {
+        LocalDate today = LocalDate.now();
+        System.out.println("Today"+today);
+
+
+        int gapDays = getAllSlotsRequest.getDate().compareTo(today);
+
+        System.out.println(gapDays);
+        System.out.println("Date"+getAllSlotsRequest.getDate());
+
+        System.out.println(getAllSlotsRequest);
+
+        List<OpenCloseTime> openCloseTime = openCloseTimeRepository.findByDate(getAllSlotsRequest.getDate());
+//        OpenCloseTime openCloseTime = openCloseTimeRepository.findByDay("WEDNESDAY".toString());
+        System.out.println("Open CloseTime"+openCloseTime);
+
+        if(openCloseTime.isEmpty())
+        {
+            // EMpty List ==> No slots
+        }
+        else
+        {
+            System.out.println("\n\n");
+            for(String turf:getAllSlotsRequest.getTurfIds()){
+
+                System.out.println(bookedTimeSlotRepository.findByDateAndTurfId(getAllSlotsRequest.getDate(),turf));
+
+            }
+
+        }
+
+        return null;
+
+    }
+
+    @Override
+    public void addOpenClose(OpenCloseTime openCloseTime) {
+        openCloseTimeRepository.insert(openCloseTime);
+    }
+
+    @Override
+    public BookedTimeSlot addBookedTimeSlot(BookedTimeSlot bookedTimeSlot) {
+        LocalDateTime temp = bookedTimeSlot.getStartTime();
+        LocalDateTime saveStartTemp = LocalDateTime.of(temp.getYear(),temp.getMonth(),temp.getDayOfMonth(), temp.getHour(), temp.getMinute());
+
+
+
+        System.out.println(saveStartTemp);
+        bookedTimeSlot.setStartTime(saveStartTemp);
+
+        temp = bookedTimeSlot.getEndTime();
+        LocalDateTime saveStopTemp = LocalDateTime.of(temp.getYear(),temp.getMonth(),temp.getDayOfMonth(), temp.getHour(), temp.getMinute());
+
+        System.out.println(saveStopTemp);
+        bookedTimeSlot.setEndTime(saveStopTemp);
+
+        return bookedTimeSlotRepository.insert(bookedTimeSlot);
+
+
+    }
+
+    private LocalDateTime exactTime(LocalDateTime temp)
+    {
+        return LocalDateTime.of(temp.getYear(),temp.getMonth(),temp.getDayOfMonth(), temp.getHour(), temp.getMinute());
+    }
+
+    @Override
+    public void getAllSlot(AllSlot allSlot) {
+        List<String> allSlotsId = new ArrayList<>();
+
+        //getShopOpenTime and getShopCloseTime from user
+        LocalDateTime start = this.exactTime(allSlot.getShopOpenTime());
+        LocalDateTime end = this.exactTime(allSlot.getShopCloseTime());
+
+        while (start.isBefore(end))
+        {
+            LocalDateTime temp = start.plusMinutes(30);
+            allSlotsId.add(this.generateIdFromStartTimeAndEndTime(start,temp));
+            start = start.plusMinutes(30);
+        }
+
+        //Get Date and turfId from User
+        LocalDate date = LocalDate.now();
+        String turf = "turf01";
+
+        List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByDateAndTurfId(date,turf);
+
+        List<String> bookedTimeSlotsIds = this.generateIdFromStartTimeAndEndTime(bookedTimeSlots);
+
+        System.out.println("All slots "+allSlotsId);
+        System.out.println("Booked slots "+bookedTimeSlotsIds);
+
+        List<String> availSlotsId = new ArrayList<>(allSlotsId);
+
+        for(String all:allSlotsId){
+            for(String booked:bookedTimeSlotsIds)
+            {
+                if(all.equals(booked)){
+//                    System.out.println("Available SlotIds are :"+all);
+                    availSlotsId.remove(all);
+                }
+            }
+        }
+
+
+        System.out.println("Available SLots are "+availSlotsId);
+    }
+
+    private List<String> generateIdFromStartTimeAndEndTime(List<BookedTimeSlot> bookedTimeSlots)
+    {
+        List<String> bookedSlotsIds = new ArrayList<>();
+
+        for(BookedTimeSlot bst :bookedTimeSlots)
+        {
+            String temp = this.generateIdFromStartTimeAndEndTime(bst.getStartTime(),bst.getEndTime());
+            bookedSlotsIds.add(temp);
+        }
+        return bookedSlotsIds;
+    }
+
+    private String generateIdFromStartTimeAndEndTime(LocalDateTime start,LocalDateTime end)
+    {
+        String id="";
+
+        if(start.isBefore(end))
+        {
+            id += ""+start.getHour()+start.getMinute()+start.getDayOfMonth()+start.getMonthValue()+start.getYear();
+            start = start.plusMinutes(30);
+        }
+
+        return id;
+    }
+
+//    private List<String> generateIdFromStartTimeAndEndTime(LocalDateTime start,LocalDateTime end)
+//    {
+//        List<String> ids = new ArrayList<>();
+//
+//        while (start.isBefore(end))
+//        {
+//            ids.add((""+start.getHour()+start.getMinute()+start.getDayOfMonth()+start.getMonthValue()+start.getYear()));
+//            start = start.plusMinutes(30);
+//        }
+//
+//        return ids;
+//    }
+
+
 
 
 }

@@ -1,5 +1,8 @@
 package com.SpringJwtTurf.controller;
 
+import com.SpringJwtTurf.documents.BookedTimeSlot;
+import com.SpringJwtTurf.documents.OpenCloseTime;
+import com.SpringJwtTurf.models.AllSlot;
 import com.SpringJwtTurf.models.request.*;
 import com.SpringJwtTurf.models.response.*;
 import com.SpringJwtTurf.service.UserService;
@@ -62,4 +65,29 @@ public class UserController {
         return response;
     }
 
+    @PostMapping("/get-all-slots-by-date")
+    public GetAllSlotsResponse getAllSlotsByDate(@RequestBody GetAllSlotsRequest getAllSlotsRequest){
+        System.out.println("GetAllSlotsByDate");
+        GetAllSlotsResponse getAllSlotsResponse = this.userService.getAllSlotsByDate(getAllSlotsRequest);
+        return getAllSlotsResponse;
+    }
+
+//    @PostMapping("/addOpenClose")
+//    public void addOpenClose(@RequestBody OpenCloseTime openCloseTime)
+//    {
+//        this.userService.addOpenClose(openCloseTime);
+//    }
+
+    @PostMapping("/addBookedTimeSlot")
+    public BookedTimeSlot addBookedTimeSlot(@RequestBody BookedTimeSlot bookedTimeSlot){
+
+        return this.userService.addBookedTimeSlot(bookedTimeSlot);
+
+    }
+
+    @PostMapping("/getAllSlots")
+    public void getAllSlot(@RequestBody AllSlot allSlot)
+    {
+        this.userService.getAllSlot(allSlot);
+    }
 }
