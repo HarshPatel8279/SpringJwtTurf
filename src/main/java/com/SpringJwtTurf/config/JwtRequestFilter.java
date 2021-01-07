@@ -45,7 +45,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         final String authorizationHeader = httpServletRequest.getHeader("Authorization");
 
-        System.out.println(authorizationHeader);
+//        System.out.println(authorizationHeader);
 
         UserDetails userDetails = null;
         String jwt = null;

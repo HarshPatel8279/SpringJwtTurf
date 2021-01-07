@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -354,16 +355,13 @@ public class UserServiceImpl implements UserService {
             start = start.plusMinutes(30);
         }
 
-        //Get Date and turfId from User
-        LocalDate date = LocalDate.now();
-        String turf = "turf01";
 
-        List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByDateAndTurfId(date,turf);
+        //Get Date and turfId from User
+        String turf = allSlot.getTurfId();
+
+        List<BookedTimeSlot> bookedTimeSlots = bookedTimeSlotRepository.findByDateAndTurfId(start.toLocalDate(),turf);
 
         List<String> bookedTimeSlotsIds = this.generateIdFromStartTimeAndEndTime(bookedTimeSlots);
-
-        System.out.println("All slots "+allSlotsId);
-        System.out.println("Booked slots "+bookedTimeSlotsIds);
 
         List<String> availSlotsId = new ArrayList<>(allSlotsId);
 
@@ -371,14 +369,60 @@ public class UserServiceImpl implements UserService {
             for(String booked:bookedTimeSlotsIds)
             {
                 if(all.equals(booked)){
-//                    System.out.println("Available SlotIds are :"+all);
+
                     availSlotsId.remove(all);
                 }
             }
         }
 
+        System.out.println("\n\tBooked Slots of "+turf+" Are\n");
+        for(BookedTimeSlot bst : bookedTimeSlots)
+        {
+            System.out.println(bst.getStartTime()+"\tto\t"+bst.getEndTime());
+        }
+        System.out.println("\n\tAvailable SLots of "+turf+" Are\n");
+        this.getDateTimeFromSlotsList(availSlotsId,start);
 
-        System.out.println("Available SLots are "+availSlotsId);
+
+    }
+
+    private void getDateTimeFromSlotsList(List<String> slots,LocalDateTime start)
+    {
+        List<LocalDateTime> slotsTime = new ArrayList<>();
+
+        for(String str1 : slots)
+        {
+            int lenStr1 = str1.length();
+
+
+            int h=0,m=0;
+
+            if(lenStr1%2!=0){
+                h = Integer.parseInt(String.valueOf(str1.charAt(0)));
+                String min = String.valueOf(str1.charAt(1))+String.valueOf(str1.charAt(2));
+
+                m = Integer.parseInt(min);
+
+            }
+            else
+            {
+                String hrs = String.valueOf(str1.charAt(0));
+                h = Integer.parseInt(hrs);
+                String min = String.valueOf(str1.charAt(1));
+                m = Integer.parseInt(min);
+
+            }
+
+
+            LocalTime time = LocalTime.of(h,m);
+            LocalDate ldate = start.toLocalDate();
+
+            LocalDateTime dateTime = LocalDateTime.of(ldate,time);
+
+            System.out.println(dateTime+"\tto\t"+dateTime.plusMinutes(30));
+        }
+
+
     }
 
     private List<String> generateIdFromStartTimeAndEndTime(List<BookedTimeSlot> bookedTimeSlots)
@@ -399,7 +443,22 @@ public class UserServiceImpl implements UserService {
 
         if(start.isBefore(end))
         {
-            id += ""+start.getHour()+start.getMinute()+start.getDayOfMonth()+start.getMonthValue()+start.getYear();
+
+            String month = String.valueOf(start.getMonthValue());
+            String day = String.valueOf(start.getDayOfMonth());
+
+
+
+            if(month.length()%2!=0 )
+            {
+                month ="0" +month;
+            }
+            if(day.length()%2!=0 )
+            {
+                day = "0"+day;
+            }
+
+            id += ""+start.getHour()+start.getMinute()+day+month;
             start = start.plusMinutes(30);
         }
 

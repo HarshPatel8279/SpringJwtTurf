@@ -85,7 +85,7 @@ public class UserController {
 
     }
 
-    @PostMapping("/getAllSlots")
+    @PostMapping("/get-available-slots")
     public void getAllSlot(@RequestBody AllSlot allSlot)
     {
         this.userService.getAllSlot(allSlot);
